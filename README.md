@@ -20,7 +20,6 @@ localStorage — client-side note persistence, no backend
 
 Getting Started
 bash# 1. Clone the repo
-git clone https://github.com/your-username/wall-calendar.git
 cd wall-calendar
 
 # 2. Install dependencies
