@@ -1,0 +1,890 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e8e8e8}
+
+  .page-bg {
+    background: radial-gradient(1200px 700px at 20% -20%, #efefef 0%, #d8d8d8 45%, #cfcfcf 100%);
+    padding: 2rem 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* Spiral binding */
+  .spiral-bar {
+    width: 380px;
+    max-width: 95vw;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+    z-index: 10;
+  }
+  .spiral-hook {
+    width: 14px; height: 20px;
+    border: 2px solid #888;
+    border-radius: 50% 50% 0 0;
+    border-bottom: none;
+    margin: 0 2px;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .spiral-hook::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 2px;
+    width: 6px; height: 6px;
+    border: 2px solid #888;
+    border-radius: 50%;
+    border-top: none; border-right: none;
+  }
+
+  /* Calendar card */
+  .cal-card {
+    --accent: #1f7fae;
+    --accent-soft: #d5ebf5;
+    --weekend: #1f7fae;
+    --strip-bg: #f2f8fb;
+    --strip-border: #dbe8ef;
+    width: 380px;
+    max-width: 95vw;
+    background: #fff;
+    border-radius: 0 0 6px 6px;
+    overflow: hidden;
+    box-shadow: 0 12px 34px rgba(0,0,0,0.16);
+    position: relative;
+    transform-origin: center center;
+    backface-visibility: hidden;
+    transition: box-shadow 0.25s ease;
+  }
+
+  .cal-card.is-flipping-right { animation: flipRight 0.36s ease; }
+  .cal-card.is-flipping-left { animation: flipLeft 0.36s ease; }
+
+  @keyframes flipRight {
+    0% { transform: perspective(900px) rotateY(0deg); }
+    45% { transform: perspective(900px) rotateY(-10deg) scale(0.992); }
+    100% { transform: perspective(900px) rotateY(0deg); }
+  }
+
+  @keyframes flipLeft {
+    0% { transform: perspective(900px) rotateY(0deg); }
+    45% { transform: perspective(900px) rotateY(10deg) scale(0.992); }
+    100% { transform: perspective(900px) rotateY(0deg); }
+  }
+
+  /* Hero image area */
+  .hero-section {
+    position: relative;
+    width: 100%;
+    padding-top: 60%;
+    overflow: hidden;
+  }
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Chevron/diagonal blue overlay */
+  .chevron-overlay {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 56%;
+    pointer-events: none;
+  }
+
+  /* Month/year label inside chevron */
+  .month-label-block {
+    position: absolute;
+    bottom: 0; right: 0;
+    background: var(--accent);
+    padding: 10px 18px 12px;
+    clip-path: polygon(22px 0%, 100% 0%, 100% 100%, 0% 100%);
+    min-width: 160px;
+    text-align: right;
+  }
+  .month-year-num {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 1.3px;
+    line-height: 1;
+  }
+  .month-name {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  /* Nav buttons */
+  .nav-prev, .nav-next {
+    position: absolute;
+    bottom: 8px;
+    background: var(--accent);
+    border: none;
+    color: white;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+    opacity: 0.9;
+    transition: opacity 0.15s;
+  }
+  .nav-prev { left: 10px; }
+  .nav-next { right: 10px; }
+  .nav-prev:hover, .nav-next:hover { opacity: 1; }
+
+  .theme-toggle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 6;
+    border: 1px solid rgba(255,255,255,0.75);
+    color: #fff;
+    background: rgba(0,0,0,0.25);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    border-radius: 999px;
+    padding: 2px 9px;
+    cursor: pointer;
+    backdrop-filter: blur(2px);
+  }
+  .theme-toggle:hover { background: rgba(0,0,0,0.38); }
+
+  .onboarding-tip {
+    position: absolute;
+    top: 42px;
+    left: 10px;
+    z-index: 7;
+    width: min(250px, calc(100% - 20px));
+    background: rgba(18, 28, 34, 0.9);
+    color: #f5f7f8;
+    border-radius: 8px;
+    padding: 9px 10px 9px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    line-height: 1.35;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.2);
+    transform-origin: top left;
+    animation: tipIn 0.28s ease;
+  }
+  .onboarding-tip.is-hidden { display: none; }
+  .onboarding-tip strong { color: #ffffff; font-weight: 700; }
+  .onboarding-tip button {
+    margin-top: 6px;
+    border: none;
+    background: rgba(255,255,255,0.16);
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: inherit;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .onboarding-tip button:hover { background: rgba(255,255,255,0.24); }
+
+  @keyframes tipIn {
+    0% { opacity: 0; transform: translateY(-6px) scale(0.98); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Bottom section: notes left + calendar right */
+  .bottom-section {
+    display: grid;
+    grid-template-columns: 5fr 7fr;
+    gap: 0;
+    padding: 15px 13px 16px;
+    border-top: 1px solid #eee;
+  }
+
+  /* Notes */
+  .notes-col {
+    padding-right: 10px;
+    border-right: 1px solid #eee;
+  }
+  .notes-heading {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .note-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .note-line {
+    width: 100%;
+    height: 22px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+  }
+  .notes-input {
+    width: 100%;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    color: #2d2d2d;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 2px 0;
+    line-height: 20px;
+    resize: none;
+    height: 132px;
+    overflow: hidden;
+    line-height: 22px;
+  }
+
+  /* Calendar grid */
+  .cal-col {
+    padding-left: 10px;
+  }
+  .weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    margin-bottom: 2px;
+  }
+  .wd-cell {
+    text-align: center;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #444;
+    padding-bottom: 2px;
+  }
+  .wd-cell.weekend { color: var(--weekend); }
+
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    row-gap: 0;
+  }
+
+  .day-cell {
+    text-align: center;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    color: #222;
+    padding: 3px 1px;
+    cursor: pointer;
+    border-radius: 3px;
+    position: relative;
+    user-select: none;
+    transition: background 0.08s;
+    touch-action: none;
+  }
+  .day-cell:hover:not(.empty):not(.other-month) { background: #e8f6fc; }
+  .day-cell.other-month { color: #bbb; cursor: default; }
+  .day-cell.weekend-day { color: var(--weekend); }
+  .day-cell.today-cell {
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .day-cell.range-start {
+    background: var(--accent) !important;
+    color: white !important;
+    border-radius: 3px 0 0 3px;
+  }
+  .day-cell.range-end {
+    background: var(--accent) !important;
+    color: white !important;
+    border-radius: 0 3px 3px 0;
+  }
+  .day-cell.range-start.range-end { border-radius: 3px; }
+  .day-cell.in-range {
+    background: var(--accent-soft);
+    border-radius: 0;
+  }
+  .day-cell.holiday-day::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #f4b740;
+  }
+  .day-cell.has-note::after {
+    content: '';
+    position: absolute;
+    bottom: 1px; left: 50%; transform: translateX(-50%);
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .day-cell.range-start.has-note::after,
+  .day-cell.range-end.has-note::after { background: rgba(255,255,255,0.8); }
+
+  /* Range info strip */
+  .range-strip {
+    background: var(--strip-bg);
+    border-top: 1px solid var(--strip-border);
+    padding: 6px 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 28px;
+  }
+  .range-strip span { color: var(--accent); font-weight: 600; }
+  .clear-btn {
+    background: none; border: none; color: #aaa; cursor: pointer;
+    font-size: 10px; font-family: 'Source Sans 3', sans-serif;
+  }
+  .clear-btn:hover { color: #666; }
+
+  /* Saved notes */
+  .saved-notes {
+    padding: 6px 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 100px;
+    overflow-y: auto;
+  }
+  .saved-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    color: #555;
+    border-left: 2px solid var(--accent);
+    padding-left: 6px;
+  }
+  .note-tag { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+  .note-del-btn { background: none; border: none; color: #ccc; cursor: pointer; font-size: 12px; margin-left: auto; flex-shrink: 0; }
+  .note-del-btn:hover { color: #999; }
+
+  /* Save note btn */
+  .save-note-row {
+    padding: 0 12px 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .save-note-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: opacity 0.15s;
+  }
+  .save-note-btn:hover { opacity: 0.85; }
+
+  .export-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 62%, white 38%);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .export-btn:hover { background: color-mix(in srgb, var(--accent-soft) 70%, white 30%); }
+
+  .mini-legend {
+    padding: 0 12px 8px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    color: #7a8289;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    align-items: center;
+  }
+  .mini-legend-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #f4b740;
+    display: inline-block;
+  }
+
+  .footer-credit {
+    text-align: center;
+    padding: 0 12px 12px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 10px;
+    color: #9aa1a6;
+    letter-spacing: 0.4px;
+  }
+
+  @media (max-width: 430px) {
+    .bottom-section { grid-template-columns: 1fr; gap: 10px; }
+    .notes-col { padding-right: 0; border-right: none; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+    .cal-col { padding-left: 0; }
+    .month-label-block { min-width: 142px; }
+    .month-name { font-size: 22px; }
+  }
+</style>
+
+<div class="page-bg">
+  <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">Wall calendar with date range selection and saved notes</h2>
+
+  <!-- Spiral binding -->
+  <div class="spiral-bar" id="spiralBar"></div>
+
+  <!-- Calendar card -->
+  <div class="cal-card" id="calCard">
+
+    <!-- Hero -->
+    <div class="hero-section">
+      <img class="hero-img" id="heroImg" src="" alt="" crossorigin="anonymous" />
+
+      <!-- Chevron blue shape via SVG -->
+      <svg class="chevron-overlay" viewBox="0 0 380 160" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="0,160 0,100 90,40 180,100 270,40 380,100 380,160" fill="white" opacity="1"/>
+        <polygon id="chevronTint" points="0,160 0,115 90,55 180,115 270,55 380,115 380,160" fill="#1f7fae" opacity="0.15"/>
+      </svg>
+
+      <button class="theme-toggle" id="themeBtn" aria-label="Switch theme mode">Theme: Auto</button>
+      <div class="onboarding-tip is-hidden" id="onboardingTip" role="status" aria-live="polite">
+        <strong>Tip:</strong> Drag across dates to select a range, then save a note or export this month as PNG.
+        <div><button id="tipDismissBtn" type="button">Got it</button></div>
+      </div>
+
+      <!-- Month label -->
+      <div class="month-label-block">
+        <div class="month-year-num" id="yearNum">2026</div>
+        <div class="month-name" id="monthName">April</div>
+      </div>
+
+      <!-- Nav -->
+      <button class="nav-prev" id="prevBtn" aria-label="Previous month">&#8592;</button>
+      <button class="nav-next" id="nextBtn" aria-label="Next month">&#8594;</button>
+    </div>
+
+    <!-- Bottom: notes + calendar -->
+    <div class="bottom-section">
+      <div class="notes-col">
+        <div class="notes-heading">Notes</div>
+        <div style="position:relative">
+          <div class="note-lines">
+            <div class="note-line"></div><div class="note-line"></div>
+            <div class="note-line"></div><div class="note-line"></div>
+            <div class="note-line"></div><div class="note-line"></div>
+          </div>
+          <textarea class="notes-input" id="notesInput" placeholder="Add a short note for this date or range..."></textarea>
+        </div>
+      </div>
+
+      <div class="cal-col">
+        <div class="weekday-row" id="weekdayRow"></div>
+        <div class="days-grid" id="daysGrid"></div>
+      </div>
+    </div>
+
+    <!-- Range info -->
+    <div class="range-strip" id="rangeStrip">
+      <div>Tap to select · drag for range</div>
+      <button class="clear-btn" id="clearBtn">clear</button>
+    </div>
+
+    <!-- Saved notes -->
+    <div class="saved-notes" id="savedNotes"></div>
+    <div class="save-note-row">
+      <button class="export-btn" id="exportBtn" aria-label="Export current month as PNG">Export PNG</button>
+      <button class="save-note-btn" id="saveNoteBtn">Save Note</button>
+    </div>
+
+    <div class="mini-legend"><span class="mini-legend-dot"></span><span>holiday</span></div>
+
+    <div class="footer-credit">Hand-planned month view</div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+(function(){
+  const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WDS=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+  const MONTH_THEMES=[
+    {accent:'#1d6989',soft:'#d9edf6',weekend:'#1d6989',stripBg:'#f1f8fb',stripBorder:'#d6e7ef'},
+    {accent:'#8a5f2f',soft:'#f3e8d7',weekend:'#8a5f2f',stripBg:'#faf5ee',stripBorder:'#eadbc5'},
+    {accent:'#4a7f59',soft:'#deefe2',weekend:'#4a7f59',stripBg:'#f2f9f3',stripBorder:'#d4e7d8'},
+    {accent:'#1f7fae',soft:'#d5ebf5',weekend:'#1f7fae',stripBg:'#f2f8fb',stripBorder:'#dbe8ef'},
+    {accent:'#7d8742',soft:'#eaf0d8',weekend:'#7d8742',stripBg:'#f6f9ed',stripBorder:'#e2e9cb'},
+    {accent:'#2b7d7f',soft:'#d7eff0',weekend:'#2b7d7f',stripBg:'#eef8f8',stripBorder:'#d2e8e9'},
+    {accent:'#2f6f93',soft:'#d9eaf4',weekend:'#2f6f93',stripBg:'#f1f8fb',stripBorder:'#d8e7ef'},
+    {accent:'#0f8f89',soft:'#d0f1ee',weekend:'#0f8f89',stripBg:'#ecfaf8',stripBorder:'#cbece8'},
+    {accent:'#a3642c',soft:'#f4e3d3',weekend:'#a3642c',stripBg:'#fbf4ee',stripBorder:'#eddac9'},
+    {accent:'#7a4f6d',soft:'#ecddee',weekend:'#7a4f6d',stripBg:'#f8f1f9',stripBorder:'#e8d7eb'},
+    {accent:'#3c5d8e',soft:'#dde5f3',weekend:'#3c5d8e',stripBg:'#f3f6fb',stripBorder:'#dbe2ef'},
+    {accent:'#6f5a45',soft:'#ebe3da',weekend:'#6f5a45',stripBg:'#f8f4f0',stripBorder:'#e6ddd3'}
+  ];
+
+  const PRESET_THEMES={
+    slate:{accent:'#2f5870',soft:'#dce8ee',weekend:'#2f5870',stripBg:'#f2f7fa',stripBorder:'#d9e3e8'},
+    sunset:{accent:'#a65f3f',soft:'#f4e2d8',weekend:'#a65f3f',stripBg:'#fbf4ef',stripBorder:'#ecddcf'},
+    forest:{accent:'#3f6f55',soft:'#ddeee4',weekend:'#3f6f55',stripBg:'#f2f8f4',stripBorder:'#d8e7dd'}
+  };
+
+  const HOLIDAYS={
+    '0-1':"New Year's Day",
+    '1-14':'Valentine\'s Day',
+    '2-17':'St. Patrick\'s Day',
+    '3-22':'Earth Day',
+    '4-1':'Labor Day',
+    '5-21':'Summer Solstice',
+    '6-4':'Independence Day',
+    '9-31':'Halloween',
+    '10-11':'Veterans Day',
+    '11-25':'Christmas Day'
+  };
+
+  const IMGS=[
+    'https://images.unsplash.com/photo-1483982258113-b72862e6cff6?w=800&q=80',
+    'https://images.unsplash.com/photo-1612540148027-96e1f3e3f153?w=800&q=80',
+    'https://images.unsplash.com/photo-1490750967868-88df5691cc56?w=800&q=80',
+    'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
+    'https://images.unsplash.com/photo-1462275646964-a0e3386b89fa?w=800&q=80',
+    'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=800&q=80',
+    'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&q=80',
+    'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
+    'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80',
+    'https://images.unsplash.com/photo-1477414348463-c0eb7f1359b6?w=800&q=80',
+    'https://images.unsplash.com/photo-1477914765649-40d40b1bef5f?w=800&q=80',
+    'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=800&q=80',
+  ];
+
+  let yr=2026, mo=3;
+  let startD=null, endD=null, dragging=false;
+  let activePointerId=null;
+  let themeMode='auto';
+  let themePreset='slate';
+  let seenOnboarding=false;
+  let notes=[];
+  try{ notes=JSON.parse(localStorage.getItem('wc2_notes')||'[]'); }catch(e){}
+  try{
+    const t=JSON.parse(localStorage.getItem('wc2_theme')||'{}');
+    if(t.mode==='manual'||t.mode==='auto') themeMode=t.mode;
+    if(t.preset&&PRESET_THEMES[t.preset]) themePreset=t.preset;
+  }catch(e){}
+  try{ seenOnboarding=localStorage.getItem('wc2_seen_tip')==='1'; }catch(e){}
+
+  const today=new Date();
+
+  // Build spiral
+  const sb=document.getElementById('spiralBar');
+  for(let i=0;i<18;i++){ const h=document.createElement('div'); h.className='spiral-hook'; sb.appendChild(h); }
+
+  function saveNotes(){ try{localStorage.setItem('wc2_notes',JSON.stringify(notes));}catch(e){} }
+  function saveTheme(){ try{localStorage.setItem('wc2_theme',JSON.stringify({mode:themeMode,preset:themePreset}));}catch(e){} }
+  function saveOnboardingSeen(){ try{localStorage.setItem('wc2_seen_tip','1');}catch(e){} }
+
+  function titleCase(str){ return str.charAt(0).toUpperCase()+str.slice(1); }
+
+  function applyTheme(){
+    const card=document.getElementById('calCard');
+    const theme=themeMode==='auto'?MONTH_THEMES[mo]:PRESET_THEMES[themePreset];
+    card.style.setProperty('--accent',theme.accent);
+    card.style.setProperty('--accent-soft',theme.soft);
+    card.style.setProperty('--weekend',theme.weekend);
+    card.style.setProperty('--strip-bg',theme.stripBg);
+    card.style.setProperty('--strip-border',theme.stripBorder);
+    const cv=document.getElementById('chevronTint');
+    cv.setAttribute('fill',theme.accent);
+    document.getElementById('themeBtn').textContent=themeMode==='auto'?'Theme: Auto':`Theme: ${titleCase(themePreset)}`;
+  }
+
+  function cycleThemeMode(){
+    if(themeMode==='auto'){ themeMode='manual'; themePreset='slate'; }
+    else if(themePreset==='slate'){ themePreset='sunset'; }
+    else if(themePreset==='sunset'){ themePreset='forest'; }
+    else { themeMode='auto'; themePreset='slate'; }
+    saveTheme();
+    applyTheme();
+  }
+
+  function hideOnboardingTip(){
+    const tip=document.getElementById('onboardingTip');
+    if(tip) tip.classList.add('is-hidden');
+    if(!seenOnboarding){
+      seenOnboarding=true;
+      saveOnboardingSeen();
+    }
+  }
+
+  function maybeShowOnboardingTip(){
+    if(seenOnboarding) return;
+    const tip=document.getElementById('onboardingTip');
+    if(tip) tip.classList.remove('is-hidden');
+  }
+
+  async function exportCurrentMonthPNG(){
+    hideOnboardingTip();
+    const btn=document.getElementById('exportBtn');
+    const card=document.getElementById('calCard');
+    if(!window.html2canvas){
+      alert('Export library failed to load. Please check your internet connection and retry.');
+      return;
+    }
+    const originalText=btn.textContent;
+    btn.textContent='Exporting...';
+    btn.disabled=true;
+    try{
+      const canvas=await window.html2canvas(card,{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+      const link=document.createElement('a');
+      const fileName=`wall-calendar-${MONTHS[mo].toLowerCase()}-${yr}.png`;
+      link.download=fileName;
+      link.href=canvas.toDataURL('image/png');
+      link.click();
+    }catch(e){
+      alert('Unable to export PNG in this browser session. Try again after the image fully loads.');
+    }finally{
+      btn.textContent=originalText;
+      btn.disabled=false;
+    }
+  }
+
+  function changeMonth(delta){
+    const card=document.getElementById('calCard');
+    const cls=delta<0?'is-flipping-left':'is-flipping-right';
+    card.classList.add(cls);
+    setTimeout(()=>{
+      mo+=delta;
+      if(mo<0){mo=11;yr--;}
+      if(mo>11){mo=0;yr++;}
+      startD=null;
+      endD=null;
+      render();
+      updateStrip();
+      applyTheme();
+    },110);
+    setTimeout(()=>{ card.classList.remove(cls); },360);
+  }
+
+  function normalizeRange(a,b){
+    if(!a&&!b) return [null,null];
+    if(a&&!b) return [a,a];
+    if(!a&&b) return [b,b];
+    return a<=b?[a,b]:[b,a];
+  }
+
+  function render(){
+    applyTheme();
+    document.getElementById('heroImg').src=IMGS[mo];
+    document.getElementById('heroImg').alt=MONTHS[mo];
+    document.getElementById('yearNum').textContent=yr;
+    document.getElementById('monthName').textContent=MONTHS[mo].toUpperCase();
+
+    const wr=document.getElementById('weekdayRow');
+    wr.innerHTML=WDS.map((d,i)=>`<div class="wd-cell${i>=5?' weekend':''}">${d}</div>`).join('');
+
+    const grid=document.getElementById('daysGrid');
+    grid.innerHTML='';
+
+    // Mon-start: get first day
+    const first=new Date(yr,mo,1);
+    let startOffset=(first.getDay()+6)%7; // 0=Mon
+    const dim=new Date(yr,mo+1,0).getDate();
+    const prevDim=new Date(yr,mo,0).getDate();
+
+    // prev month days
+    for(let i=startOffset-1;i>=0;i--){
+      const d=prevDim-i;
+      const cell=document.createElement('div');
+      cell.className='day-cell other-month';
+      cell.textContent=d;
+      grid.appendChild(cell);
+    }
+
+    const [lo,hi]=normalizeRange(startD,endD);
+
+    for(let d=1;d<=dim;d++){
+      const cell=document.createElement('div');
+      const dow=(new Date(yr,mo,d).getDay()+6)%7;
+      const holidayName=HOLIDAYS[`${mo}-${d}`]||'';
+      let cls='day-cell';
+      if(dow>=5) cls+=' weekend-day';
+      if(yr===today.getFullYear()&&mo===today.getMonth()&&d===today.getDate()) cls+=' today-cell';
+      if(lo&&d===lo) cls+=' range-start';
+      if(hi&&d===hi) cls+=' range-end';
+      if(lo&&hi&&d>lo&&d<hi) cls+=' in-range';
+      if(holidayName) cls+=' holiday-day';
+      const hasNote=notes.some(n=>{
+        if(n.mo!==`${yr}-${mo}`) return false;
+        const s=n.startDay||n.day||null;
+        const e=n.endDay||n.day||null;
+        if(!s&&!e) return false;
+        const lo=Math.min(s,e);
+        const hi=Math.max(s,e);
+        return d>=lo&&d<=hi;
+      });
+      if(hasNote) cls+=' has-note';
+      cell.className=cls;
+      cell.textContent=d;
+      cell.dataset.d=d;
+      if(holidayName){
+        cell.title=holidayName;
+        cell.setAttribute('aria-label',`${MONTHS[mo]} ${d} ${holidayName}`);
+      }
+
+      cell.addEventListener('pointerdown',(e)=>{
+        e.preventDefault();
+        hideOnboardingTip();
+        activePointerId=e.pointerId;
+        startD=d;
+        endD=d;
+        dragging=true;
+        render();
+        updateStrip();
+      });
+      cell.addEventListener('pointerenter',()=>{
+        if(dragging){
+          endD=d;
+          render();
+          updateStrip();
+        }
+      });
+      cell.addEventListener('pointerup',(e)=>{
+        if(dragging&&activePointerId===e.pointerId){
+          endD=d;
+          dragging=false;
+          activePointerId=null;
+          const [nLo,nHi]=normalizeRange(startD,endD);
+          startD=nLo;
+          endD=nHi;
+          render();
+          updateStrip();
+        }
+      });
+
+      grid.appendChild(cell);
+    }
+
+    // next month fill
+    const filled=startOffset+dim;
+    const remaining=(7-filled%7)%7;
+    for(let d=1;d<=remaining;d++){
+      const cell=document.createElement('div');
+      cell.className='day-cell other-month';
+      cell.textContent=d;
+      grid.appendChild(cell);
+    }
+
+    renderSavedNotes();
+  }
+
+  function updateStrip(){
+    const strip=document.getElementById('rangeStrip');
+    if(!startD){ strip.innerHTML='<div>Select a day or drag a range</div><button class="clear-btn" id="clearBtn">clear</button>'; attachClear(); return; }
+    const [lo,hi]=normalizeRange(startD,endD);
+    const mn=MONTHS[mo].slice(0,3);
+    const txt=hi&&hi!==lo?`<span>${mn} ${lo} - ${mn} ${hi}</span>`:`<span>${mn} ${lo}</span>`;
+    strip.innerHTML=`<div>${txt} selected</div><button class="clear-btn" id="clearBtn">clear</button>`;
+    attachClear();
+  }
+
+  function attachClear(){
+    const btn=document.getElementById('clearBtn');
+    if(btn) btn.addEventListener('click',()=>{ startD=null; endD=null; render(); updateStrip(); });
+  }
+
+  function renderSavedNotes(){
+    const container=document.getElementById('savedNotes');
+    const monthNotes=notes.filter(n=>n.mo===`${yr}-${mo}`);
+    container.innerHTML=monthNotes.map((n,li)=>{
+      const fullIdx=notes.indexOf(n);
+      const start=n.startDay||n.day||null;
+      const end=n.endDay||n.day||null;
+      let lbl=MONTHS[mo].slice(0,3);
+      if(start&&end&&start!==end) lbl+=` ${Math.min(start,end)}-${Math.max(start,end)}`;
+      else if(start) lbl+=` ${start}`;
+      return `<div class="saved-note"><span class="note-tag">${lbl}</span><span>${n.text}</span><button class="note-del-btn" data-i="${fullIdx}" aria-label="Delete note">&#215;</button></div>`;
+    }).join('');
+    container.querySelectorAll('.note-del-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{ notes.splice(parseInt(btn.dataset.i),1); saveNotes(); renderSavedNotes(); render(); });
+    });
+  }
+
+  document.getElementById('saveNoteBtn').addEventListener('click',()=>{
+    hideOnboardingTip();
+    const text=document.getElementById('notesInput').value.trim();
+    if(!text) return;
+    const [lo,hi]=normalizeRange(startD,endD);
+    notes.push({
+      mo:`${yr}-${mo}`,
+      day:lo||null,
+      startDay:lo||null,
+      endDay:hi||null,
+      text
+    });
+    saveNotes();
+    document.getElementById('notesInput').value='';
+    renderSavedNotes();
+    render();
+  });
+
+  document.getElementById('prevBtn').addEventListener('click',()=>{ changeMonth(-1); });
+  document.getElementById('nextBtn').addEventListener('click',()=>{ changeMonth(1); });
+  document.getElementById('themeBtn').addEventListener('click',()=>{ hideOnboardingTip(); cycleThemeMode(); });
+  document.getElementById('exportBtn').addEventListener('click',exportCurrentMonthPNG);
+  document.getElementById('tipDismissBtn').addEventListener('click',hideOnboardingTip);
+
+  document.addEventListener('keydown',(e)=>{
+    const ae=document.activeElement;
+    if(ae&&ae.id==='notesInput') return;
+    if(e.key==='ArrowLeft') changeMonth(-1);
+    if(e.key==='ArrowRight') changeMonth(1);
+  });
+
+  document.addEventListener('pointerup',(e)=>{
+    if(dragging&&activePointerId===e.pointerId){
+      dragging=false;
+      activePointerId=null;
+      const [nLo,nHi]=normalizeRange(startD,endD);
+      startD=nLo;
+      endD=nHi;
+      render();
+      updateStrip();
+    }
+  });
+
+  render();
+  updateStrip();
+  applyTheme();
+  setTimeout(maybeShowOnboardingTip,380);
+})();
+</script>
